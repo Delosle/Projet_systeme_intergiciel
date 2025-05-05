@@ -3,7 +3,6 @@ package linda.test;
 import linda.*;
 
 public class BasicTest1 {
-
     public static void main(String[] a) {
                 
         final Linda linda = new linda.shm.CentralizedLinda();
