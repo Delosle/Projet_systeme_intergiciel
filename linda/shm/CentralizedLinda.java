@@ -33,33 +33,28 @@ public class CentralizedLinda implements Linda {
 
     private final ArrayList<Event> events = new ArrayList<>();
     
-    public synchronized void write (Tuple t){
+    public synchronized void write(Tuple t) {
         tupleSpace.add(t);
         notifyAll();
 
-        // Vérifier les événements enregistrés
-        ArrayList<Event> triggeredEvents = new ArrayList<>();
-        for (Event event : events) {
-            if (t.matches(event.template)) {
-                // Exécuter le callback
-                event.callback.call(t);
+        // Créer une copie de la liste des événements pour éviter les modifications concurrentes
+        ArrayList<Event> eventsCopy = new ArrayList<>(events);
 
-                // Si le mode est TAKE, retirer le tuple de l'espace de tuples
+        for (Event event : eventsCopy) {
+            if (t.matches(event.template)) {
+                // Supprimer l'événement d'abord pour éviter les doubles déclenchements
+                events.remove(event);
+
                 if (event.mode == eventMode.TAKE) {
                     tupleSpace.remove(t);
                 }
 
-                // Ajouter l'événement à la liste des événements déclenchés
-                triggeredEvents.add(event);
+                event.callback.call(t);
             }
         }
-
-        // Supprimer les événements déclenchés de la liste
-        events.removeAll(triggeredEvents);
     }
 
-    // TODO: voir quel Tuple est trouvé en premier
-    // Le premier Tuple avec le meme template est renvoyé
+
 
     public synchronized Tuple take (Tuple template){
         while(true){
@@ -143,30 +138,29 @@ public class CentralizedLinda implements Linda {
         return tupleToSend;
     }
 
-    public void eventRegister (eventMode mode, eventTiming timing, Tuple template, Callback callback){
+    public synchronized void eventRegister(eventMode mode, eventTiming timing, Tuple template, Callback callback) {
         Event event = new Event(mode, timing, template, callback);
 
-        if (mode == eventMode.READ) {
-            if (timing == eventTiming.IMMEDIATE) {
-                Tuple found_tuple = tryRead(template);
-                if (found_tuple != null) {
-                    callback.call(found_tuple);
-                }
-                return;
+        if (timing == eventTiming.IMMEDIATE) {
+            Tuple found_tuple = (mode == eventMode.READ) ? tryRead(template) : tryTake(template);
+            if (found_tuple != null) {
+                callback.call(found_tuple);
             }
-            events.add(event);
         }
-        else if (mode == eventMode.TAKE) {
-            if (timing == eventTiming.IMMEDIATE) {
-                Tuple found_tuple = tryTake(template);
-                if (found_tuple != null) {
-                    callback.call(found_tuple);
-                }
-                return;
+
+        // Vérifier si un événement identique existe déjà
+        for (Event e : events) {
+            if (e.template.equals(template) && e.callback == callback && e.mode == mode) {
+                return; // Ne pas ajouter de doublon
             }
-            events.add(event);
         }
-        
+
+        // Ajouter l'événement à la liste
+        events.add(event);
+    }
+
+    public void clean_Tspace() {
+        tupleSpace.clear();
     }
 
     public void debug(String prefix) {
