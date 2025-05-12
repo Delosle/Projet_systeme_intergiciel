@@ -1,10 +1,14 @@
-package linda;
+package linda.server;
 
+import linda.Linda.eventMode;
+import linda.Linda.eventTiming;
+import linda.Tuple;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Collection;
 
-public interface Linda extends Remote {
+
+public interface RemoteLinda extends Remote {
 
     /** Adds a tuple t to the tuplespace. */
     public void write(Tuple t) throws RemoteException;
@@ -55,7 +59,11 @@ public interface Linda extends Remote {
      * @param template the filtering template.
      * @param callback the callback to call if a matching tuple appears.
      */
-    public void eventRegister(eventMode mode, eventTiming timing, Tuple template, Callback callback) throws RemoteException;
+    // dans linda/RemoteLinda.java
+    public void eventRegister(eventMode mode, eventTiming timing,
+                       Tuple template, RemoteCallback callback)
+                       throws RemoteException;
+
 
     /** To debug, prints any information it wants (e.g. the tuples in tuplespace or the registered callbacks), prefixed by <code>prefix</code. */
     public void debug(String prefix) throws RemoteException;

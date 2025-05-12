@@ -1,23 +1,24 @@
 package linda.server;
 
+import linda.Linda;
+
 import java.rmi.*;
-import java.rmi.server.*;
 import java.rmi.registry.*;
 
-// Classe principale du serveur
 public class LindaServer {
     public static void main(String[] args) {
         try {
             // Création de l'instance du service
-            MonService service = new MonServiceImpl();
+            RemoteLinda service = new LindaServerImpl();
 
-            // Création du registre RMI sur le port 1099
-            LocateRegistry.createRegistry(1099);
+
+            // Création du registre RMI sur le port 4000
+            LocateRegistry.createRegistry(4000);
 
             // Enregistrement du service dans le registre
-            Naming.rebind("rmi://localhost/MonService", service);
+            Naming.rebind("//localhost:4000/LindaServer", service);
 
-            System.out.println("Serveur démarré et en attente de connexions...");
+            System.out.println("Serveur Linda démarré et en attente de connexions...");
         } catch (Exception e) {
             System.err.println("Erreur lors du démarrage du serveur : " + e.getMessage());
             e.printStackTrace();
