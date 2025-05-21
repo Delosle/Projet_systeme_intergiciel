@@ -1,6 +1,6 @@
 package linda.server;
 
-import linda.*;
+import lindlocalLindaa.*;
 import java.rmi.*;
 import java.rmi.NotBoundException;
 import java.net.MalformedURLException;
@@ -9,8 +9,7 @@ import java.util.Collection;
 public class LindaClient implements Linda {
     private final RemoteLinda remoteLinda;
 
-    public LindaClient(String serverURI)
-            throws RemoteException, NotBoundException, MalformedURLException {
+    public LindaClient(String serverURI) throws RemoteException {
         this.remoteLinda = (RemoteLinda) Naming.lookup(serverURI);
     }
 
@@ -78,17 +77,17 @@ public class LindaClient implements Linda {
     }
 
     @Override
-public void eventRegister(eventMode mode, eventTiming timing,
-                          Tuple template, Callback clientCallback) {
-    try {
-        // 1) créer le stub RMI qui enveloppe ton callback local
-        RemoteCallback cbStub = new AsynchronousCallbackImpl(clientCallback);
-        // 2) appeler la méthode distante avec ce stub
-        remoteLinda.eventRegister(mode, timing, template, cbStub);
-    } catch (RemoteException e) {
-        throw new RuntimeException("Erreur eventRegister RMI", e);
+    public void eventRegister(eventMode mode, eventTiming timing,
+                            Tuple template, Callback clientCallback) {
+        try {
+            // 1) créer le stub RMI qui enveloppe ton callback local
+            RemoteCallback cbStub = new AsynchronousCallbackImpl(clientCallback);
+            // 2) appeler la méthode distante avec ce stub
+            remoteLinda.eventRegister(mode, timing, template, cbStub);
+        } catch (RemoteException e) {
+            throw new RuntimeException("Erreur eventRegister RMI", e);
+        }
     }
-}
 
     @Override
     public void debug(String prefix) {

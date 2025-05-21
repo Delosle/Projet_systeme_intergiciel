@@ -1,6 +1,7 @@
 package linda.server;
 
-import linda.Linda;
+import linda.RemoteLinda;
+
 
 import java.rmi.*;
 import java.rmi.registry.*;

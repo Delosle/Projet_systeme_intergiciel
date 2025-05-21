@@ -2,6 +2,9 @@ package linda.server;
 
 import linda.*;
 import linda.shm.CentralizedLinda;
+import linda.Linda.eventMode;
+import linda.Linda.eventTiming;
+
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
