@@ -9,8 +9,10 @@ public class test_unitaire_Centralized {
 
     public void testWrite(CentralizedLinda linda) {
         linda.clean_Tspace();
-
+        
         System.out.println("=== Test Write ===");
+        linda.debug("");
+
         Tuple tuple1 = new Tuple(1, "test1");
         Tuple tuple2 = new Tuple(2, "test2");
 
@@ -118,6 +120,73 @@ public class test_unitaire_Centralized {
             e.printStackTrace();
         }
     }
+
+    public void testReadPriorityOverTake(CentralizedLinda linda) {
+        linda.clean_Tspace();
+    
+        System.out.println("=== Test Priorité des READ sur les TAKE ===");
+    
+        // Thread pour effectuer un read
+        Thread readerThread1 = new Thread(() -> {
+            Tuple motif = new Tuple(1, String.class);
+            System.out.println("Thread READ 1 : En attente du tuple " + motif);
+            Tuple result = linda.read(motif);
+            System.out.println("Thread READ 1 : Tuple lu : " + result);
+        }, "READ-1");
+    
+        // Thread pour effectuer un autre read
+        Thread readerThread2 = new Thread(() -> {
+            Tuple motif = new Tuple(1, String.class);
+            System.out.println("Thread READ 2 : En attente du tuple " + motif);
+            Tuple result = linda.read(motif);
+            System.out.println("Thread READ 2 : Tuple lu : " + result);
+        }, "READ-2");
+    
+        // Thread pour effectuer un take
+        Thread takerThread = new Thread(() -> {
+            Tuple motif = new Tuple(1, String.class);
+            System.out.println("Thread TAKE : En attente du tuple " + motif);
+            Tuple result = linda.take(motif);
+            System.out.println("Thread TAKE : Tuple retiré : " + result);
+        }, "TAKE");
+    
+        // Démarrer les threads
+        readerThread1.start();
+        readerThread2.start();
+        takerThread.start();
+    
+        // Ajouter un tuple après un délai
+        new Thread(() -> {
+            try {
+                Thread.sleep(2000);
+                Tuple tuple1 = new Tuple(1, "test1");
+                System.out.println("Ajout du tuple : " + tuple1);
+                linda.write(tuple1);
+    
+                Thread.sleep(2000);
+                Tuple tuple2 = new Tuple(1, "test2");
+                System.out.println("Ajout du tuple : " + tuple2);
+                linda.write(tuple2);
+    
+                Thread.sleep(2000);
+                Tuple tuple3 = new Tuple(1, "test3");
+                System.out.println("Ajout du tuple : " + tuple3);
+                linda.write(tuple3);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    
+        // Attendre la fin des threads
+        try {
+            readerThread1.join();
+            readerThread2.join();
+            takerThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void testTryTake(CentralizedLinda linda) {
         linda.clean_Tspace();
