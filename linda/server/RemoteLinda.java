@@ -1,4 +1,4 @@
-package linda;
+package linda.server;
 
 import linda.Linda.eventMode;
 import linda.Linda.eventTiming;

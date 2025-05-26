@@ -1,16 +1,18 @@
 package linda.server;
 
-import lindlocalLindaa.*;
+import linda.*;
 import java.rmi.*;
-import java.rmi.NotBoundException;
-import java.net.MalformedURLException;
 import java.util.Collection;
 
 public class LindaClient implements Linda {
-    private final RemoteLinda remoteLinda;
+    private RemoteLinda remoteLinda;
 
-    public LindaClient(String serverURI) throws RemoteException {
-        this.remoteLinda = (RemoteLinda) Naming.lookup(serverURI);
+    public LindaClient(String serverURI) {
+        try {
+            this.remoteLinda = (RemoteLinda) Naming.lookup(serverURI);
+        } catch (Exception e) {
+            System.err.println("Échec de connexion au serveur: " + e.getMessage());
+        }
     }
 
     @Override
@@ -97,4 +99,22 @@ public class LindaClient implements Linda {
             throw new RuntimeException("Erreur debug RMI", e);
         }
     }
+
+    // ...existing code...
+
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.err.println("Usage: java linda.server.LindaClient //localhost:4000/LindaServer");
+            return;
+        }
+        LindaClient client = new LindaClient(args[0]);
+        Tuple t = new Tuple(42, "hello");
+        client.write(t);
+        System.out.println("Tuple écrit : " + t);
+
+        Tuple lu = client.read(new Tuple(42, "hello"));
+        System.out.println("Tuple lu : " + lu);
+    }
 }
+
+
