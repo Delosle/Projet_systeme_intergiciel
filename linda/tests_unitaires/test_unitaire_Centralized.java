@@ -168,6 +168,42 @@ public class test_unitaire_Centralized {
         System.out.println("Cas 2 - Aucun tuple trouvé : " + result2);
     }
 
+    public void testTakeAll(CentralizedLinda linda) {
+        linda.clean_Tspace();
+
+        System.out.println("=== Test TakeAll ===");
+
+        // Ajouter plusieurs tuples qui matchent le même motif
+        Tuple tuple1 = new Tuple(1, "test1");
+        Tuple tuple2 = new Tuple(1, "test2");
+        Tuple tuple3 = new Tuple(1, "test3");
+        Tuple tuple4 = new Tuple(2, "autre"); // Ne matche pas
+
+        linda.write(tuple1);
+        linda.write(tuple2);
+        linda.write(tuple3);
+        linda.write(tuple4);
+
+        System.out.println("Tuples ajoutés : " + tuple1 + ", " + tuple2 + ", " + tuple3 + ", " + tuple4);
+        linda.debug("Avant takeAll");
+
+        // Tester takeAll avec un motif qui matche plusieurs tuples
+        Tuple motif = new Tuple(1, String.class);
+        Collection<Tuple> results = linda.takeAll(motif);
+
+        System.out.println("Motif utilisé : " + motif);
+        System.out.println("Tuples récupérés avec takeAll : " + results);
+        System.out.println("Nombre de tuples récupérés : " + results.size());
+
+        linda.debug("Après takeAll");
+
+        // Tester takeAll avec un motif qui ne matche aucun tuple
+        Tuple motif2 = new Tuple(3, String.class);
+        Collection<Tuple> results2 = linda.takeAll(motif2);
+        System.out.println("Test avec motif qui ne matche rien : " + motif2);
+        System.out.println("Résultat : " + results2 + " (taille: " + results2.size() + ")");
+    }
+
     public static void main(String[] args) {
         test_unitaire_Centralized test = new test_unitaire_Centralized();
         CentralizedLinda linda = new CentralizedLinda();
@@ -180,5 +216,6 @@ public class test_unitaire_Centralized {
         test.testReadBlocking(linda);
         test.testTryTake(linda);
         test.testTryRead(linda);
+        test.testTakeAll(linda);
     }
 }
