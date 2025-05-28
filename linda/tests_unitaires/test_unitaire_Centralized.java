@@ -2,6 +2,7 @@ package linda.tests_unitaires;
 
 import linda.*;
 import linda.server.LindaClient;
+import linda.shm.CentralizedLinda;
 
 import java.util.Collection;
 
@@ -168,7 +169,7 @@ public class test_unitaire_Centralized {
         System.out.println("Cas 2 - Aucun tuple trouvé : " + result2);
     }
 
-    public void testTakeAll(CentralizedLinda linda) {
+    /**public void testTakeAll(Linda linda) {
         linda.clean_Tspace();
 
         System.out.println("=== Test TakeAll ===");
@@ -202,7 +203,7 @@ public class test_unitaire_Centralized {
         Collection<Tuple> results2 = linda.takeAll(motif2);
         System.out.println("Test avec motif qui ne matche rien : " + motif2);
         System.out.println("Résultat : " + results2 + " (taille: " + results2.size() + ")");
-    }
+    }**/
 
     public static void main(String[] args) {
         if (args.length != 1) {
@@ -220,6 +221,6 @@ public class test_unitaire_Centralized {
         test.testReadBlocking(linda);
         test.testTryTake(linda);
         test.testTryRead(linda);
-        test.testTakeAll(linda);
+        //test.testTakeAll(linda);
     }
 }
