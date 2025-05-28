@@ -85,6 +85,7 @@ public class LindaClient implements Linda {
             // 1) créer le stub RMI qui enveloppe ton callback local
             RemoteCallback cbStub = new AsynchronousCallbackImpl(clientCallback);
             // 2) appeler la méthode distante avec ce stub
+            System.out.println("CLIENT : enregistrement d’un callback RMI sur " + template);
             remoteLinda.eventRegister(mode, timing, template, cbStub);
         } catch (RemoteException e) {
             throw new RuntimeException("Erreur eventRegister RMI", e);
@@ -98,22 +99,6 @@ public class LindaClient implements Linda {
         } catch (RemoteException e) {
             throw new RuntimeException("Erreur debug RMI", e);
         }
-    }
-
-    // ...existing code...
-
-    public static void main(String[] args) {
-        if (args.length != 1) {
-            System.err.println("Usage: java linda.server.LindaClient //localhost:4000/LindaServer");
-            return;
-        }
-        LindaClient client = new LindaClient(args[0]);
-        Tuple t = new Tuple(42, "hello");
-        client.write(t);
-        System.out.println("Tuple écrit : " + t);
-
-        Tuple lu = client.read(new Tuple(42, "hello"));
-        System.out.println("Tuple lu : " + lu);
     }
 }
 

@@ -1,14 +1,14 @@
 package linda.tests_unitaires;
 
 import linda.*;
-import linda.shm.CentralizedLinda;
+import linda.server.LindaClient;
 
 import java.util.Collection;
 
 public class test_unitaire_Centralized {
 
-    public void testWrite(CentralizedLinda linda) {
-        linda.clean_Tspace();
+    public void testWrite(Linda linda) {
+        // linda.clean_Tspace(); // à commenter/supprimer si non disponible côté serveur
 
         System.out.println("=== Test Write ===");
         Tuple tuple1 = new Tuple(1, "test1");
@@ -21,8 +21,8 @@ public class test_unitaire_Centralized {
         linda.debug("");
     }
 
-    public void testTakeImmediate(CentralizedLinda linda) {
-        linda.clean_Tspace();
+    public void testTakeImmediate(Linda linda) {
+        // linda.clean_Tspace();
 
         System.out.println("=== Test Take (Immediate) ===");
 
@@ -38,8 +38,8 @@ public class test_unitaire_Centralized {
         linda.debug("");
     }
 
-    public void testTakeBlocking(CentralizedLinda linda) {
-        linda.clean_Tspace();
+    public void testTakeBlocking(Linda linda) {
+        // linda.clean_Tspace();
 
         System.out.println("=== Test Take (Blocking) ===");
 
@@ -71,8 +71,8 @@ public class test_unitaire_Centralized {
         }
     }
 
-    public void testReadImmediate(CentralizedLinda linda) {
-        linda.clean_Tspace();
+    public void testReadImmediate(Linda linda) {
+        // linda.clean_Tspace();
 
         System.out.println("=== Test Read (Immediate) ===");
         Tuple tuple1 = new Tuple(1, "test1");
@@ -86,8 +86,8 @@ public class test_unitaire_Centralized {
         linda.debug("");
     }
 
-    public void testReadBlocking(CentralizedLinda linda) {
-        linda.clean_Tspace();
+    public void testReadBlocking(Linda linda) {
+        // linda.clean_Tspace();
 
         System.out.println("=== Test Read (Blocking) ===");
 
@@ -119,8 +119,8 @@ public class test_unitaire_Centralized {
         }
     }
 
-    public void testTryTake(CentralizedLinda linda) {
-        linda.clean_Tspace();
+    public void testTryTake(Linda linda) {
+        // linda.clean_Tspace();
 
         System.out.println("=== Test TryTake ===");
 
@@ -142,8 +142,8 @@ public class test_unitaire_Centralized {
         System.out.println("Cas 2 - Aucun tuple trouvé : " + result2);
     }
 
-    public void testTryRead(CentralizedLinda linda) {
-        linda.clean_Tspace();
+    public void testTryRead(Linda linda) {
+        // linda.clean_Tspace();
 
         System.out.println("=== Test TryRead ===");
 
@@ -169,8 +169,12 @@ public class test_unitaire_Centralized {
     }
 
     public static void main(String[] args) {
+        if (args.length != 1) {
+            System.err.println("Usage: java linda.tests_unitaires.test_unitaire_Centralized //localhost:4000/LindaServer");
+            return;
+        }
         test_unitaire_Centralized test = new test_unitaire_Centralized();
-        CentralizedLinda linda = new CentralizedLinda();
+        Linda linda = new LindaClient(args[0]);
 
         // Appeler les tests
         test.testWrite(linda);
