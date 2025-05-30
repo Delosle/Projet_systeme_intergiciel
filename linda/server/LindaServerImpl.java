@@ -59,6 +59,7 @@ public class LindaServerImpl extends UnicastRemoteObject implements RemoteLinda 
             @Override
             public void call(Tuple t) {
                 try {
+                    System.out.println("SERVEUR : reçu eventRegister() pour " + template);
                     remoteCb.call(t);
                 } catch (RemoteException e) {
                     e.printStackTrace();
