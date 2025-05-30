@@ -204,6 +204,92 @@ public class test_unitaire_Centralized {
         System.out.println("Résultat : " + results2 + " (taille: " + results2.size() + ")");
     }
 
+    public void testReadAll(CentralizedLinda linda) {
+        linda.clean_Tspace();
+
+        System.out.println("=== Test ReadAll ===");
+
+        // Ajouter plusieurs tuples qui matchent le même motif
+        Tuple tuple1 = new Tuple(1, "test1");
+        Tuple tuple2 = new Tuple(1, "test2");
+        Tuple tuple3 = new Tuple(1, "test3");
+        Tuple tuple4 = new Tuple(2, "autre"); // Ne matche pas
+
+        linda.write(tuple1);
+        linda.write(tuple2);
+        linda.write(tuple3);
+        linda.write(tuple4);
+
+        System.out.println("Tuples ajoutés : " + tuple1 + ", " + tuple2 + ", " + tuple3 + ", " + tuple4);
+        linda.debug("Avant readAll");
+
+        // Tester readAll avec un motif qui matche plusieurs tuples
+        Tuple motif = new Tuple(1, String.class);
+        Collection<Tuple> results = linda.readAll(motif);
+
+        System.out.println("Motif utilisé : " + motif);
+        System.out.println("Tuples lus avec readAll : " + results);
+        System.out.println("Nombre de tuples lus : " + results.size());
+
+        linda.debug("Après readAll (tuples doivent encore être présents)");
+
+        // Vérifier que les tuples sont encore dans l'espace
+        Tuple motifVerification = new Tuple(1, String.class);
+        Collection<Tuple> verification = linda.readAll(motifVerification);
+        System.out.println("Vérification - tuples encore présents : " + verification.size());
+
+        // Tester readAll avec un motif qui ne matche aucun tuple
+        Tuple motif2 = new Tuple(3, String.class);
+        Collection<Tuple> results2 = linda.readAll(motif2);
+        System.out.println("Test avec motif qui ne matche rien : " + motif2);
+        System.out.println("Résultat : " + results2 + " (taille: " + results2.size() + ")");
+
+        // Tester readAll avec un motif très générique
+        Tuple motifGenerique = new Tuple(Integer.class, String.class);
+        Collection<Tuple> resultsGenerique = linda.readAll(motifGenerique);
+        System.out.println("Test avec motif générique : " + motifGenerique);
+        System.out.println("Résultat générique : " + resultsGenerique + " (taille: " + resultsGenerique.size() + ")");
+    }
+
+    public void testCleanTspace(CentralizedLinda linda) {
+        System.out.println("=== Test Clean_Tspace ===");
+
+        // Ajouter plusieurs tuples
+        Tuple tuple1 = new Tuple(1, "test1");
+        Tuple tuple2 = new Tuple(2, "test2");
+        Tuple tuple3 = new Tuple(3, "test3");
+
+        linda.write(tuple1);
+        linda.write(tuple2);
+        linda.write(tuple3);
+
+        System.out.println("Tuples ajoutés : " + tuple1 + ", " + tuple2 + ", " + tuple3);
+        linda.debug("Avant clean_Tspace");
+
+        // Vérifier qu'il y a des tuples avec readAll
+        Tuple motifGenerique = new Tuple(Integer.class, String.class);
+        Collection<Tuple> avant = linda.readAll(motifGenerique);
+        System.out.println("Nombre de tuples avant nettoyage : " + avant.size());
+
+        // Nettoyer l'espace de tuples
+        linda.clean_Tspace();
+        System.out.println("Nettoyage effectué avec clean_Tspace()");
+
+        linda.debug("Après clean_Tspace");
+
+        // Vérifier que l'espace est vide
+        Collection<Tuple> apres = linda.readAll(motifGenerique);
+        System.out.println("Nombre de tuples après nettoyage : " + apres.size());
+
+        // Test avec tryRead pour confirmer que l'espace est vide
+        Tuple testVide = linda.tryRead(new Tuple(Integer.class, String.class));
+        System.out.println("Test tryRead après clean : " + testVide + " (doit être null)");
+
+        // Test avec tryTake pour confirmer que l'espace est vide
+        Tuple testVide2 = linda.tryTake(new Tuple(Integer.class, String.class));
+        System.out.println("Test tryTake après clean : " + testVide2 + " (doit être null)");
+    }
+
     public static void main(String[] args) {
         test_unitaire_Centralized test = new test_unitaire_Centralized();
         CentralizedLinda linda = new CentralizedLinda();
@@ -217,5 +303,7 @@ public class test_unitaire_Centralized {
         test.testTryTake(linda);
         test.testTryRead(linda);
         test.testTakeAll(linda);
+        test.testReadAll(linda);
+        test.testCleanTspace(linda);
     }
 }
