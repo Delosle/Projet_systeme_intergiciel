@@ -1,5 +1,6 @@
 package linda.server;
 
+import linda.AsynchronousCallback;
 import linda.Linda.eventMode;
 import linda.Linda.eventTiming;
 import linda.Tuple;
@@ -65,7 +66,9 @@ public interface RemoteLinda extends Remote {
                        throws RemoteException;
 
 
-    /** To debug, prints any information it wants (e.g. the tuples in tuplespace or the registered callbacks), prefixed by <code>prefix</code. */
-    public void debug(String prefix) throws RemoteException;
+    /** Clears the tuple space. */
+    public void clean_Tspace() throws RemoteException;
 
+    /** For debugging, prints any information about the Linda implementation. */
+    public void debug(String prefix) throws RemoteException;
 }

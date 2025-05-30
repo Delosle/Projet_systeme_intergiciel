@@ -73,6 +73,10 @@ public class LindaServerImpl extends UnicastRemoteObject implements RemoteLinda 
     public void debug(String prefix) throws RemoteException {
         localLinda.debug(prefix);
     }
+
+    public void clean_Tspace() {
+        localLinda.clean_Tspace();
+    }
 }
 //
 //     public void debug(String prefix) {

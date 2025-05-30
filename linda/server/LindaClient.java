@@ -91,57 +91,54 @@ import java.util.ArrayList;
 
     /** Enregistre un callback côté client pour écouter les ERASEALL */
     private void setupEraseAllCallback() {
-    try {
-        // Création du motif ERASEALL
-        Tuple eraseMotif = new Tuple("Whiteboard",
-            Enum.valueOf(
-                (Class<Enum>) (Class<?>) Class.forName("linda.whiteboard.WhiteboardModel$Command"),
-                "ERASEALL"
-            ));
-        System.out.println("CLIENT : enregistrement du callback ERASEALL pour " + eraseMotif);
+        try {
+            // Création du motif ERASEALL
+            Tuple eraseMotif = new Tuple("Whiteboard",
+                Enum.valueOf(
+                    (Class<Enum>) (Class<?>) Class.forName("linda.whiteboard.WhiteboardModel$Command"),
+                    "ERASEALL"
+                ));
+            System.out.println("CLIENT : enregistrement du callback ERASEALL pour " + eraseMotif);
 
-        // On crée une référence finale pour la réutiliser dans le callback
-        final RemoteCallback[] eraseCbHolder = new RemoteCallback[1];
+            // On crée une référence finale pour la réutiliser dans le callback
+            final RemoteCallback[] eraseCbHolder = new RemoteCallback[1];
 
-        // Création du stub de callback RMI
-        eraseCbHolder[0] = new AsynchronousCallbackImpl(new Callback() {
-            public void call(Tuple t) {
-                System.out.println("CLIENT : reçu ERASEALL → resynchronisation");
+            // Création du stub de callback RMI
+            eraseCbHolder[0] = new AsynchronousCallbackImpl(new Callback() {
+                public void call(Tuple t) {
+                    System.out.println("CLIENT : reçu ERASEALL → resynchronisation");
 
-                for (Tuple template : lastReadTemplates) {
-                    try {
-                        Collection<Tuple> rest = readAll(template);
-                        System.out.println("CLIENT : tuples encore présents après ERASE :");
-                        for (Tuple rt : rest) {
-                            System.out.println("  ↪ " + rt);
+                    for (Tuple template : lastReadTemplates) {
+                        try {
+                            Collection<Tuple> rest = readAll(template);
+                            System.out.println("CLIENT : tuples encore présents après ERASE :");
+                            for (Tuple rt : rest) {
+                                System.out.println("  ↪ " + rt);
+                            }
+                        } catch (Exception e) {
+                            System.err.println("CLIENT : erreur relecture post-ERASE");
+                            e.printStackTrace();
                         }
-                    } catch (Exception e) {
-                        System.err.println("CLIENT : erreur relecture post-ERASE");
+                    }
+
+                    // Réenregistrement du callback
+                    try {
+                        remoteLinda.eventRegister(eventMode.READ, eventTiming.FUTURE, eraseMotif, eraseCbHolder[0]);
+                    } catch (RemoteException e) {
+                        System.err.println("CLIENT : erreur re-registration ERASEALL");
                         e.printStackTrace();
                     }
                 }
+            });
 
-                // Réenregistrement du callback
-                try {
-                    remoteLinda.eventRegister(eventMode.READ, eventTiming.FUTURE, eraseMotif, eraseCbHolder[0]);
-                } catch (RemoteException e) {
-                    System.err.println("CLIENT : erreur re-registration ERASEALL");
-                    e.printStackTrace();
-                }
-            }
-        });
+            // Enregistrement initial
+            remoteLinda.eventRegister(eventMode.READ, eventTiming.FUTURE, eraseMotif, eraseCbHolder[0]);
 
-        // Enregistrement initial
-        remoteLinda.eventRegister(eventMode.READ, eventTiming.FUTURE, eraseMotif, eraseCbHolder[0]);
-
-    } catch (Exception e) {
-        System.err.println("CLIENT : erreur lors du setup ERASEALL");
-        e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("CLIENT : erreur lors du setup ERASEALL");
+            e.printStackTrace();
+        }
     }
-}
-
-
-
 
 
     @Override
@@ -170,6 +167,14 @@ import java.util.ArrayList;
             remoteLinda.debug(prefix);
         } catch (RemoteException e) {
             throw new RuntimeException("Erreur debug RMI", e);
+        }
+    }
+
+    public void clean_Tspace() {
+        try {
+            remoteLinda.clean_Tspace();
+        } catch (RemoteException e) {
+            throw new RuntimeException("Erreur clean_Tspace RMI", e);
         }
     }
 }

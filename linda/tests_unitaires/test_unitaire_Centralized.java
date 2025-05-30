@@ -169,8 +169,18 @@ public class test_unitaire_Centralized {
         System.out.println("Cas 2 - Aucun tuple trouvé : " + result2);
     }
 
-    /**public void testTakeAll(Linda linda) {
-        linda.clean_Tspace();
+    private void cleanTupleSpace(Linda linda) {
+        if (linda instanceof CentralizedLinda) {
+            ((CentralizedLinda) linda).clean_Tspace();
+        } else if (linda instanceof LindaClient) {
+            ((LindaClient) linda).clean_Tspace();
+        } else {
+            System.out.println("clean_Tspace() non disponible pour ce type: " + linda.getClass().getSimpleName());
+        }
+    }
+
+    public void testTakeAll(Linda linda) {
+        cleanTupleSpace(linda);
 
         System.out.println("=== Test TakeAll ===");
 
@@ -203,10 +213,10 @@ public class test_unitaire_Centralized {
         Collection<Tuple> results2 = linda.takeAll(motif2);
         System.out.println("Test avec motif qui ne matche rien : " + motif2);
         System.out.println("Résultat : " + results2 + " (taille: " + results2.size() + ")");
-    }**/
+    }
 
-    public void testReadAll(CentralizedLinda linda) {
-        linda.clean_Tspace();
+    public void testReadAll(Linda linda) {
+        cleanTupleSpace(linda);
 
         System.out.println("=== Test ReadAll ===");
 
@@ -232,7 +242,7 @@ public class test_unitaire_Centralized {
         System.out.println("Tuples lus avec readAll : " + results);
         System.out.println("Nombre de tuples lus : " + results.size());
 
-        linda.debug("Après readAll (tuples doivent encore être présents)");
+        linda.debug("Après readAll : ");
 
         // Vérifier que les tuples sont encore dans l'espace
         Tuple motifVerification = new Tuple(1, String.class);
@@ -252,7 +262,7 @@ public class test_unitaire_Centralized {
         System.out.println("Résultat générique : " + resultsGenerique + " (taille: " + resultsGenerique.size() + ")");
     }
 
-    public void testCleanTspace(CentralizedLinda linda) {
+    public void testCleanTspace(Linda linda) {
         System.out.println("=== Test Clean_Tspace ===");
 
         // Ajouter plusieurs tuples
@@ -273,7 +283,7 @@ public class test_unitaire_Centralized {
         System.out.println("Nombre de tuples avant nettoyage : " + avant.size());
 
         // Nettoyer l'espace de tuples
-        linda.clean_Tspace();
+        cleanTupleSpace(linda);
         System.out.println("Nettoyage effectué avec clean_Tspace()");
 
         linda.debug("Après clean_Tspace");
@@ -299,7 +309,7 @@ public class test_unitaire_Centralized {
         test_unitaire_Centralized test = new test_unitaire_Centralized();
         Linda linda = new LindaClient(args[0]);
 
-        // Appeler les tests
+        test.testCleanTspace(linda);
         test.testWrite(linda);
         test.testTakeImmediate(linda);
         test.testTakeBlocking(linda);
@@ -309,6 +319,8 @@ public class test_unitaire_Centralized {
         test.testTryRead(linda);
         test.testTakeAll(linda);
         test.testReadAll(linda);
-        test.testCleanTspace(linda);
+        
+        System.out.println("=== Tests terminés ===");
+        System.exit(0);
     }
 }
