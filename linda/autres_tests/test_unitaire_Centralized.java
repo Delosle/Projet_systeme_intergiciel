@@ -307,8 +307,9 @@ public class test_unitaire_Centralized {
             return;
         }
         test_unitaire_Centralized test = new test_unitaire_Centralized();
-        Linda linda = new LindaClient(args[0]);
-
+        // Linda linda = new LindaClient(args[0]);
+        Linda linda = new CentralizedLinda();
+        
         test.testCleanTspace(linda);
         test.testWrite(linda);
         test.testTakeImmediate(linda);
