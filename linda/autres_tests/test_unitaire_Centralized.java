@@ -1,4 +1,4 @@
-package linda.tests_unitaires;
+package linda.autres_tests;
 
 import linda.*;
 import linda.server.LindaClient;
@@ -9,54 +9,52 @@ import java.util.Collection;
 public class test_unitaire_Centralized {
 
     public void testWrite(Linda linda) {
-        // linda.clean_Tspace(); // à commenter/supprimer si non disponible côté serveur
+        cleanTupleSpace(linda);
 
         System.out.println("=== Test Write ===");
         Tuple tuple1 = new Tuple(1, "test1");
         Tuple tuple2 = new Tuple(2, "test2");
-
+        linda.debug("Avant les write");
         linda.write(tuple1);
         linda.write(tuple2);
-
-        System.out.println("Tuples ajoutés : " + tuple1 + " et " + tuple2);
-        linda.debug("");
+        linda.debug("Apres les write");
     }
 
     public void testTakeImmediate(Linda linda) {
-        // linda.clean_Tspace();
+        cleanTupleSpace(linda);
 
         System.out.println("=== Test Take (Immediate) ===");
 
         Tuple tuple1 = new Tuple(1, "test1");
         linda.write(tuple1);
-        linda.debug("");
+        linda.debug("Avant le Take (Immediate)");
 
         Tuple motif = new Tuple(1, String.class);
         Tuple result = linda.take(motif);
 
         System.out.println("Motif : " + motif);
         System.out.println("Tuple retiré immédiatement : " + result);
-        linda.debug("");
+        linda.debug("Apres le Take (Immediate)");
     }
 
     public void testTakeBlocking(Linda linda) {
-        // linda.clean_Tspace();
+        cleanTupleSpace(linda);
 
         System.out.println("=== Test Take (Blocking) ===");
 
         Thread takerThread = new Thread(() -> {
             Tuple motif = new Tuple(2, String.class);
-            linda.debug("");
+            linda.debug("Avant le Take (Blocking)");
             System.out.println("Thread Take : En attente du tuple " + motif);
             Tuple result = linda.take(motif);
             System.out.println("Thread Take : Tuple retiré après attente : " + result);
-            linda.debug("");
+            linda.debug("Apres le Take (Blocking)");
         });
 
         takerThread.start();
 
         try {
-            Thread.sleep(2000); // Attendre 2 secondes avant d'ajouter le tuple
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -73,38 +71,38 @@ public class test_unitaire_Centralized {
     }
 
     public void testReadImmediate(Linda linda) {
-        // linda.clean_Tspace();
+        cleanTupleSpace(linda);
 
         System.out.println("=== Test Read (Immediate) ===");
         Tuple tuple1 = new Tuple(1, "test1");
         linda.write(tuple1);
-        linda.debug("");
+        linda.debug("Avant Read (Immediate)");
         Tuple motif = new Tuple(1, String.class);
         Tuple result = linda.read(motif);
 
         System.out.println("Motif : " + motif);
         System.out.println("Tuple lu immédiatement : " + result);
-        linda.debug("");
+        linda.debug("Après Read (Immediate)");
     }
 
     public void testReadBlocking(Linda linda) {
-        // linda.clean_Tspace();
+        cleanTupleSpace(linda);
 
         System.out.println("=== Test Read (Blocking) ===");
 
         Thread readerThread = new Thread(() -> {
             Tuple motif = new Tuple(2, String.class);
-            linda.debug("");
+            linda.debug("Avant Read (Blocking)");
             System.out.println("Thread Read : En attente du tuple " + motif);
             Tuple result = linda.read(motif);
             System.out.println("Thread Read : Tuple lu après attente : " + result);
-            linda.debug("");
+            linda.debug("Après Read (Blocking)");
         });
 
         readerThread.start();
 
         try {
-            Thread.sleep(2000); // Attendre 2 secondes avant d'ajouter le tuple
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -121,22 +119,24 @@ public class test_unitaire_Centralized {
     }
 
     public void testTryTake(Linda linda) {
-        // linda.clean_Tspace();
+        cleanTupleSpace(linda);
 
         System.out.println("=== Test TryTake ===");
 
         // Cas 1 : Le tuple est présent
         Tuple tuple1 = new Tuple(1, "test1");
         linda.write(tuple1);
-        linda.debug("");
+        linda.debug("Avant TryTake (essai 1)");
 
         Tuple motif1 = new Tuple(1, String.class);
         Tuple result1 = linda.tryTake(motif1);
         System.out.println("Cas 1 - test récupération d'un tuple avec motif" + motif1);
         System.out.println("Cas 1 - Tuple retiré immédiatement : " + result1);
+        linda.debug("Après TryTake (essai 1)");
 
         // Cas 2 : Le tuple n'est pas présent
         Tuple motif2 = new Tuple(2, String.class);
+
         Tuple result2 = linda.tryTake(motif2);
         linda.debug("");
         System.out.println("Cas 2 - test récupération d'un tuple avec motif" + motif2);
@@ -144,7 +144,7 @@ public class test_unitaire_Centralized {
     }
 
     public void testTryRead(Linda linda) {
-        // linda.clean_Tspace();
+        cleanTupleSpace(linda);
 
         System.out.println("=== Test TryRead ===");
 
@@ -152,7 +152,7 @@ public class test_unitaire_Centralized {
         Tuple tuple1 = new Tuple(1, "test1");
         linda.write(tuple1);
 
-        linda.debug("");
+        linda.debug("Avant TryRead (essai 1)");
 
         Tuple motif1 = new Tuple(1, String.class);
         Tuple result1 = linda.tryRead(motif1);
@@ -160,7 +160,7 @@ public class test_unitaire_Centralized {
         System.out.println("Cas 1 - test lecture d'un tuple avec motif" + motif1);
         System.out.println("Cas 1 - Tuple lu immédiatement : " + result1);
 
-        linda.debug("");
+        linda.debug("Apres TryRead (essai 1)");
 
         // Cas 2 : Le tuple n'est pas présent
         Tuple motif2 = new Tuple(2, String.class);

@@ -1,4 +1,4 @@
-package linda.tests_prof;
+package linda.autres_tests;
 
 import linda.*;
 import linda.shm.CentralizedLinda;
