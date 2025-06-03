@@ -16,8 +16,7 @@ import java.util.ArrayList;
         try {
             this.remoteLinda = (RemoteLinda) Naming.lookup(serverURI);
             System.out.println("CLIENT : connecté au serveur");
-
-            // 👇 Partie ajoutée : s’abonner au ERASEALL
+            // Enregistrement du callback ERASEALL
             setupEraseAllCallback();
 
         } catch (Exception e) {
