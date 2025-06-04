@@ -52,7 +52,6 @@ public class CentralizedLinda implements Linda {
         }
     }
 
-    //private final ArrayList<Event> events = new ArrayList<>();
 
     private synchronized void saveToFile() {
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(SAVE_FILE))) {
@@ -95,8 +94,10 @@ public class CentralizedLinda implements Linda {
         saver.start();
     }
 
+    // Cette fonction wakeNextReaderOrTaker(Tuple writtenTuple) gère le réveil des threads 
+    // en attente après qu'un tuple a été écrit dans l'espace de tuples.
     private synchronized Queue<Thread> getQueueForTemplate(Map<Tuple, Queue<Thread>> queueMap, Tuple template) {
-        return queueMap.computeIfAbsent(template, k -> new LinkedList<>());
+        return queueMap.computeIfAbsent(template, k -> new LinkedList<>()); //computeIfAbsent utilisée pour vérifier si une clé spécifique est présente dans la map
     }
 
     
@@ -109,7 +110,6 @@ public class CentralizedLinda implements Linda {
 
         wakeNextReaderOrTaker(t);
 
-        // Gestion des callbacks avec priorité READ sur TAKE
         List<Event> eventsCopy = new ArrayList<>(events);
 
         // Traitement de tous les READ d'abord
@@ -316,7 +316,7 @@ public class CentralizedLinda implements Linda {
     public void clean_Tspace() {
         tupleSpace.clear();
         new File(SAVE_FILE).delete();  // suppression du fichier
-        modifier = false;                 // plus rien à sauvegarder
+        modifier = false;              // plus rien à sauvegarder
         System.out.println("Tuplespace nettoyé.");
     }
 

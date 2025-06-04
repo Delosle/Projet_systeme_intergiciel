@@ -23,9 +23,6 @@ public class LindaServerImpl extends UnicastRemoteObject implements RemoteLinda 
     }
 
 
-    /**public void write(Tuple t) throws RemoteException {
-        localLinda.write(t);
-    }**/
    @Override
     public void write(Tuple t) throws RemoteException {
         try {
@@ -37,14 +34,13 @@ public class LindaServerImpl extends UnicastRemoteObject implements RemoteLinda 
 
             if (t.matches(eraseMotif)) {
                 System.out.println("SERVEUR : DETECTÉ ERASEALL → nettoyage tupleSpace + suppression fichier");
-                localLinda.clean_Tspace();  // 🔁 nettoie d'abord
+                localLinda.clean_Tspace(); 
             }
 
         } catch (Exception e) {
             System.err.println("SERVEUR : erreur lors de la détection ERASEALL : " + e.getMessage());
         }
 
-        // ✅ On écrit toujours le tuple ERASEALL pour déclencher les callbacks clients
         localLinda.write(t);
     }
 
@@ -107,12 +103,7 @@ public class LindaServerImpl extends UnicastRemoteObject implements RemoteLinda 
 
     @Override
     public void eraseAll() throws RemoteException {
-        localLinda.clean_Tspace();  // vide la mémoire et supprime le fichier
+        localLinda.clean_Tspace();  
     }
 
 }
-//
-//     public void debug(String prefix) {
-//         System.out.println(prefix + " : " + localLinda.tupleSpace);
-//     }
-//      

@@ -16,6 +16,6 @@ public class TestClientB {
         Tuple tuple = new Tuple("event", 123);
         linda.write(tuple);
 
-        System.out.println("📤 Client B a écrit le tuple : " + tuple);
+        System.out.println("Client B a écrit le tuple : " + tuple);
     }
 }
