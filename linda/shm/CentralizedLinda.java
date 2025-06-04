@@ -52,8 +52,7 @@ public class CentralizedLinda implements Linda {
         }
     }
 
-<<<<<<< HEAD
-    private final ArrayList<Event> events = new ArrayList<>();
+    //private final ArrayList<Event> events = new ArrayList<>();
 
     private synchronized void saveToFile() {
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(SAVE_FILE))) {
