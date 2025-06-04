@@ -1,4 +1,4 @@
-package linda.test;
+package linda.autres_tests;
 
 import linda.*;
 import linda.server.LindaClient;
@@ -16,7 +16,7 @@ public class TestClientA {
 
         linda.eventRegister(Linda.eventMode.READ, Linda.eventTiming.FUTURE, template, new Callback() {
             public void call(Tuple t) {
-                System.out.println("✅ CALLBACK reçu côté Client A : " + t);
+                System.out.println("CALLBACK reçu côté Client A : " + t);
             }
         });
 

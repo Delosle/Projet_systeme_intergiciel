@@ -41,8 +41,10 @@ public class CentralizedLinda implements Linda {
 
     }
 
+    // Cette fonction wakeNextReaderOrTaker(Tuple writtenTuple) gère le réveil des threads 
+    // en attente après qu'un tuple a été écrit dans l'espace de tuples.
     private synchronized Queue<Thread> getQueueForTemplate(Map<Tuple, Queue<Thread>> queueMap, Tuple template) {
-        return queueMap.computeIfAbsent(template, k -> new LinkedList<>());
+        return queueMap.computeIfAbsent(template, k -> new LinkedList<>()); //computeIfAbsent utilisée pour vérifier si une clé spécifique est présente dans la map
     }
 
     
@@ -53,7 +55,6 @@ public class CentralizedLinda implements Linda {
 
         wakeNextReaderOrTaker(t);
 
-        // Gestion des callbacks avec priorité READ sur TAKE
         List<Event> eventsCopy = new ArrayList<>(events);
 
         // Traitement de tous les READ d'abord

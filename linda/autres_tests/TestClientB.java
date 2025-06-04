@@ -1,4 +1,4 @@
-package linda.test;
+package linda.autres_tests;
 
 import linda.*;
 import linda.server.LindaClient;
@@ -16,6 +16,6 @@ public class TestClientB {
         Tuple tuple = new Tuple("event", 123);
         linda.write(tuple);
 
-        System.out.println("📤 Client B a écrit le tuple : " + tuple);
+        System.out.println("Client B a écrit le tuple : " + tuple);
     }
 }

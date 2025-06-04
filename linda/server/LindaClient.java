@@ -112,7 +112,7 @@ import java.util.ArrayList;
                             Collection<Tuple> rest = readAll(template);
                             System.out.println("CLIENT : tuples encore présents après ERASE :");
                             for (Tuple rt : rest) {
-                                System.out.println("  ↪ " + rt);
+                                System.out.println(" -> " + rt);
                             }
                         } catch (Exception e) {
                             System.err.println("CLIENT : erreur relecture post-ERASE");
