@@ -58,9 +58,9 @@ public class CentralizedLinda implements Linda {
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(SAVE_FILE))) {
             out.writeObject(tupleSpace);
             modifier = false;
-            System.out.println("✅ Tuplespace sauvegardé.");
+            System.out.println("Tuplespace sauvegardé.");
         } catch (IOException e) {
-            System.err.println("❌ Erreur sauvegarde : " + e.getMessage());
+            System.err.println("Erreur sauvegarde : " + e.getMessage());
         }
     }
 
@@ -72,9 +72,9 @@ public class CentralizedLinda implements Linda {
         }
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
             tupleSpace = (ArrayList<Tuple>) in.readObject();
-            System.out.println("✅ Tuplespace restauré depuis le fichier.");
+            System.out.println("Tuplespace restauré depuis le fichier.");
         } catch (Exception e) {
-            System.err.println("❌ Erreur de restauration : " + e.getMessage());
+            System.err.println("Erreur de restauration : " + e.getMessage());
         }
     }
 
@@ -317,7 +317,7 @@ public class CentralizedLinda implements Linda {
         tupleSpace.clear();
         new File(SAVE_FILE).delete();  // suppression du fichier
         modifier = false;                 // plus rien à sauvegarder
-        System.out.println("✅ Tuplespace nettoyé.");
+        System.out.println("Tuplespace nettoyé.");
     }
 
     public void debug(String prefix) {
