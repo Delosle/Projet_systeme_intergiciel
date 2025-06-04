@@ -1,11 +1,12 @@
+
 package linda.shm;
 
 import linda.Callback;
 import linda.Linda;
 import linda.Tuple;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
+
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,15 +21,22 @@ import java.io.IOException;
 public class CentralizedLinda implements Linda {
 	
     ArrayList<Tuple> tupleSpace;
+    private final Map<Tuple, Queue<Thread>> readQueues;
+    private final Map<Tuple, Queue<Thread>> takeQueues;
     private final String SAVE_FILE = "tuplespace.dat";
     private volatile boolean modifier = false;  // indique si l’état a changé depuis la dernière sauvegarde
     
+    private final List<Event> events;
 
     public CentralizedLinda(){
-        tupleSpace = new ArrayList<Tuple>();
+        this.tupleSpace = new ArrayList<>();
+        this.readQueues = new HashMap<>();
+        this.takeQueues = new HashMap<>();
+        this.events = new ArrayList<>();
         loadFromFile();
         startAutoSaver();
     }
+
 
     private static class Event{
         eventMode mode;
@@ -44,6 +52,7 @@ public class CentralizedLinda implements Linda {
         }
     }
 
+<<<<<<< HEAD
     private final ArrayList<Event> events = new ArrayList<>();
 
     private synchronized void saveToFile() {
@@ -87,70 +96,154 @@ public class CentralizedLinda implements Linda {
         saver.start();
     }
 
+    private synchronized Queue<Thread> getQueueForTemplate(Map<Tuple, Queue<Thread>> queueMap, Tuple template) {
+        return queueMap.computeIfAbsent(template, k -> new LinkedList<>());
+    }
 
     
-    public synchronized void write(Tuple t) {
-        tupleSpace.add(t);
-        modifier = true;  // Marquer l'état comme modifié
-        notifyAll();
+    public void write(Tuple t) {
+        synchronized (this) {
+            tupleSpace.add(t);
+            modifier = true;  // Marquer l'état comme modifié
+        }
+    
 
-        // Créer une copie de la liste des événements pour éviter les modifications concurrentes
-        ArrayList<Event> eventsCopy = new ArrayList<>(events);
+        wakeNextReaderOrTaker(t);
 
+        // Gestion des callbacks avec priorité READ sur TAKE
+        List<Event> eventsCopy = new ArrayList<>(events);
+
+        // Traitement de tous les READ d'abord
         for (Event event : eventsCopy) {
-            if (t.matches(event.template)) {
-                // Supprimer l'événement d'abord pour éviter les doubles déclenchements
+            if (t.matches(event.template) && event.mode == eventMode.READ) {
                 events.remove(event);
-
-                if (event.mode == eventMode.TAKE) {
-                    tupleSpace.remove(t);
-                }
-
                 event.callback.call(t);
             }
         }
-    }
-
-
-
-    public synchronized Tuple take (Tuple template){
-        while(true){
-            for (Tuple t : tupleSpace){
-                if (t.matches(template)) {
-                    Tuple ret_tuple = t;
-                    tupleSpace.remove(t);
-                    modifier = true;  // Marquer l'état comme modifié
-                    return ret_tuple;
+        // traitement du premier TAKE, mais seulement si le tuple est encore présent
+        for (Event event : eventsCopy) {
+            if (t.matches(event.template) && event.mode == eventMode.TAKE) {
+                synchronized (this) {
+                    // Recherche du tuple dans l'espace de tuple
+                    Tuple tupleToRemove = null;
+                    for (Tuple tupleInSpace : tupleSpace) {
+                        if (tupleInSpace.matches(event.template)) {
+                            tupleToRemove = tupleInSpace;
+                            break;
+                        }
+                    }
+                    
+                    // Appel du Callback, supression du tuple de la liste et suppression du callback de la liste
+                    if (tupleToRemove != null) {
+                        events.remove(event);
+                        tupleSpace.remove(tupleToRemove);
+                        event.callback.call(tupleToRemove);
+                        return;
+                    }
                 }
-            }
-            try {
-                // Attendre qu'un autre thread ajoute un tuple correspondant
-                wait();
-
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // Réinterrompre le thread
-                return null;
             }
         }
     }
 
-    public synchronized Tuple read (Tuple template){
-        while(true){
-            for (Tuple t:tupleSpace){
+
+
+    public Tuple take (Tuple template) {
+        synchronized (this) {
+            for (Tuple t : tupleSpace) {
+                if (t.matches(template)) {
+                    tupleSpace.remove(t);
+                    modifier = true;  // Marquer l'état comme modifié
+                    return t;
+                }
+            }
+
+            Queue<Thread> queue = getQueueForTemplate(takeQueues, template);
+            queue.add(Thread.currentThread());
+        }
+
+        synchronized (Thread.currentThread()) {
+            try {
+                Thread.currentThread().wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+        }
+
+        return take(template);
+    }
+
+
+
+    
+    
+    public Tuple read(Tuple template) {
+        synchronized (this) {
+            for (Tuple t : tupleSpace) {
                 if (t.matches(template)) {
                     return t;
                 }
             }
+
+            Queue<Thread> queue = getQueueForTemplate(readQueues, template);
+            queue.add(Thread.currentThread());
+        }
+
+        synchronized (Thread.currentThread()) {
             try {
-                // Attendre qu'un autre thread ajoute un tuple correspondant
-                wait();
-                
+                Thread.currentThread().wait();
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // Réinterrompre le thread
+                Thread.currentThread().interrupt();
                 return null;
             }
         }
+
+        Tuple result = read(template);
+        wakeNextReaderOrTaker(template);
+        return result;
     }
+
+
+
+
+    private void wakeNextReaderOrTaker(Tuple writtenTuple) {
+        synchronized (this) {
+            for (Map.Entry<Tuple, Queue<Thread>> entry : readQueues.entrySet()) {
+                if (writtenTuple.matches(entry.getKey())) {
+                    Queue<Thread> queue = entry.getValue();
+                    if (!queue.isEmpty()) {
+                        Thread thread = queue.poll();
+                        synchronized (thread) {
+                            thread.notify();
+                        }
+                        if (queue.isEmpty()) {
+                            readQueues.remove(entry.getKey());
+                        }
+                        return;
+                    }
+                }
+            }
+
+            for (Map.Entry<Tuple, Queue<Thread>> entry : takeQueues.entrySet()) {
+                if (writtenTuple.matches(entry.getKey())) {
+                    Queue<Thread> queue = entry.getValue();
+                    if (!queue.isEmpty()) {
+                        Thread thread = queue.poll();
+                        synchronized (thread) {
+                            thread.notify();
+                        }
+                        System.out.println("→ Réveil TAKE : " + thread.getName());
+                        if (queue.isEmpty()) {
+                            takeQueues.remove(entry.getKey());
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+
 
     public synchronized Tuple tryTake(Tuple template){
         for (Tuple t:tupleSpace){
@@ -159,7 +252,6 @@ public class CentralizedLinda implements Linda {
                 tupleSpace.remove(t);
                 modifier = true;  // Marquer l'état comme modifié
                 return ret_tuple;
-
             }
         }
         return null;
@@ -168,7 +260,7 @@ public class CentralizedLinda implements Linda {
     public synchronized Tuple tryRead(Tuple template){
         for (Tuple t:tupleSpace){
             if (t.matches(template)) {
-                return t;
+                return t; 
             }
         }
         return null;
@@ -198,6 +290,8 @@ public class CentralizedLinda implements Linda {
         return tupleToSend;
     }
 
+    
+
     public synchronized void eventRegister(eventMode mode, eventTiming timing, Tuple template, Callback callback) {
         Event event = new Event(mode, timing, template, callback);
 
@@ -205,19 +299,20 @@ public class CentralizedLinda implements Linda {
             Tuple found_tuple = (mode == eventMode.READ) ? tryRead(template) : tryTake(template);
             if (found_tuple != null) {
                 callback.call(found_tuple);
+                return;
             }
         }
 
-        // Vérifier si un événement identique existe déjà
         for (Event e : events) {
             if (e.template.equals(template) && e.callback == callback && e.mode == mode) {
-                return; // Ne pas ajouter de doublon
+                return;
             }
         }
 
-        // Ajouter l'événement à la liste
         events.add(event);
     }
+
+
 
     public void clean_Tspace() {
         tupleSpace.clear();
@@ -227,10 +322,18 @@ public class CentralizedLinda implements Linda {
     }
 
     public void debug(String prefix) {
-        System.out.println(prefix + " Tuples actuels dans l'espace de tuples:");
+        System.out.println(prefix + "--------------------------");
+        System.out.println(prefix + " Tuples actuels :");
         for (Tuple t : tupleSpace) {
-            System.out.println(prefix + " " + t.toString());
+            System.out.println(prefix + " " + t);
         }
+        System.out.println(prefix + "--------------------------");
+        System.out.println(prefix + " Callbacks enregistrés :");
+        for (Event e : events) {
+            System.out.println(prefix + " Mode: " + e.mode + ", Timing: " + e.timing + ", Template: " + e.template);
+        }
+        System.out.println(prefix + "--------------------------");
     }
+
 
 }
