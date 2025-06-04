@@ -29,7 +29,6 @@ public class LindaServerImpl extends UnicastRemoteObject implements RemoteLinda 
    @Override
     public void write(Tuple t) throws RemoteException {
         try {
-            // Vérifie si le tuple est un ERASEALL
             Tuple eraseMotif = new Tuple("Whiteboard",
                 Enum.valueOf(
                     (Class<Enum>) (Class<?>) Class.forName("linda.whiteboard.WhiteboardModel$Command"),
@@ -38,18 +37,17 @@ public class LindaServerImpl extends UnicastRemoteObject implements RemoteLinda 
 
             if (t.matches(eraseMotif)) {
                 System.out.println("SERVEUR : DETECTÉ ERASEALL → nettoyage tupleSpace + suppression fichier");
-                localLinda.clean_Tspace();  // supprime les tuples ET le fichier
-                return;  // ⛔ on n’écrit PAS ce tuple dans l’espace
+                localLinda.clean_Tspace();  // 🔁 nettoie d'abord
             }
 
         } catch (Exception e) {
             System.err.println("SERVEUR : erreur lors de la détection ERASEALL : " + e.getMessage());
-            // on continue quand même
         }
 
-        // Pour tous les autres tuples, on écrit normalement
+        // ✅ On écrit toujours le tuple ERASEALL pour déclencher les callbacks clients
         localLinda.write(t);
     }
+
 
 
 
