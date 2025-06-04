@@ -1,4 +1,4 @@
-package linda.test;
+package linda.autres_tests;
 
 import linda.*;
 import linda.server.LindaClient;
