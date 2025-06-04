@@ -7,14 +7,27 @@ import linda.Tuple;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.IOException;
+
+
+
 /** Shared memory implementation of Linda. */
 public class CentralizedLinda implements Linda {
 	
     ArrayList<Tuple> tupleSpace;
+    private final String SAVE_FILE = "tuplespace.dat";
+    private volatile boolean modifier = false;  // indique si l’état a changé depuis la dernière sauvegarde
     
 
     public CentralizedLinda(){
         tupleSpace = new ArrayList<Tuple>();
+        loadFromFile();
+        startAutoSaver();
     }
 
     private static class Event{
@@ -32,9 +45,53 @@ public class CentralizedLinda implements Linda {
     }
 
     private final ArrayList<Event> events = new ArrayList<>();
+
+    private synchronized void saveToFile() {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(SAVE_FILE))) {
+            out.writeObject(tupleSpace);
+            modifier = false;
+            System.out.println("✅ Tuplespace sauvegardé.");
+        } catch (IOException e) {
+            System.err.println("❌ Erreur sauvegarde : " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void loadFromFile() {
+        File file = new File(SAVE_FILE);
+        if (!file.exists()) {
+            return;
+        }
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
+            tupleSpace = (ArrayList<Tuple>) in.readObject();
+            System.out.println("✅ Tuplespace restauré depuis le fichier.");
+        } catch (Exception e) {
+            System.err.println("❌ Erreur de restauration : " + e.getMessage());
+        }
+    }
+
+    private void startAutoSaver() {
+        Thread saver = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(3000);
+                    if (modifier) { 
+                        saveToFile();
+                    }
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        });
+        saver.setDaemon(true);
+        saver.start();
+    }
+
+
     
     public synchronized void write(Tuple t) {
         tupleSpace.add(t);
+        modifier = true;  // Marquer l'état comme modifié
         notifyAll();
 
         // Créer une copie de la liste des événements pour éviter les modifications concurrentes
@@ -62,6 +119,7 @@ public class CentralizedLinda implements Linda {
                 if (t.matches(template)) {
                     Tuple ret_tuple = t;
                     tupleSpace.remove(t);
+                    modifier = true;  // Marquer l'état comme modifié
                     return ret_tuple;
                 }
             }
@@ -99,6 +157,7 @@ public class CentralizedLinda implements Linda {
             if (t.matches(template)) {
                 Tuple ret_tuple = t;
                 tupleSpace.remove(t);
+                modifier = true;  // Marquer l'état comme modifié
                 return ret_tuple;
 
             }
@@ -121,6 +180,7 @@ public class CentralizedLinda implements Linda {
         for (Tuple t:tupleSpace){
             if (t.matches(template)){
                 tupleToSend.add(t);
+                modifier = true; // Marquer l'état comme modifié
             }
         }
         tupleSpace.removeAll(tupleToSend);
@@ -161,6 +221,9 @@ public class CentralizedLinda implements Linda {
 
     public void clean_Tspace() {
         tupleSpace.clear();
+        new File(SAVE_FILE).delete();  // suppression du fichier
+        modifier = false;                 // plus rien à sauvegarder
+        System.out.println("✅ Tuplespace nettoyé.");
     }
 
     public void debug(String prefix) {

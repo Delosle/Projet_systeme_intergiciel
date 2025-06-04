@@ -176,6 +176,16 @@ import java.util.ArrayList;
             throw new RuntimeException("Erreur clean_Tspace RMI", e);
         }
     }
+
+    
+    public void eraseAll() {
+    try {
+        remoteLinda.eraseAll();
+    } catch (RemoteException e) {
+        throw new RuntimeException("Erreur eraseAll RMI", e);
+    }
+}
+
 }
 
 

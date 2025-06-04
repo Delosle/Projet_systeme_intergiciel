@@ -69,6 +69,10 @@ public interface RemoteLinda extends Remote {
     /** Clears the tuple space. */
     public void clean_Tspace() throws RemoteException;
 
+    /** Supprimer tous les tuples de l'espace des tuples et supprime aussi le fichier tuplespace.dat */
+    public void eraseAll() throws RemoteException;
+
+
     /** For debugging, prints any information about the Linda implementation. */
     public void debug(String prefix) throws RemoteException;
 }
